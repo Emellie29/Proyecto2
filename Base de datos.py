@@ -3,10 +3,10 @@ class Productos:
         self.id_producto = id_producto
         self.nombreP = nombreP
         self.precio = precio
-        self.stock=0
-        self.id_categoria=id_categoria #llave
-        self.totalventas=totalventas
-        self.totalcompras=totalcompras
+        self.stock = 0
+        self.id_categoria = id_categoria #llave
+        self.totalventas = totalventas
+        self.totalcompras = totalcompras
     def actualizar_stock(self, cantidad, tipo):
         if tipo == "compra":
             self.stock += cantidad
@@ -14,6 +14,7 @@ class Productos:
             if cantidad > self.stock:
                 raise ValueError("Producto insuficiente")
             self.stock -= cantidad
+            self.totalventas += cantidad
     def resumen(self):
         return f"{self.id_producto} - {self.nombre} - Q.{self.precio} - {self.stock}"
 class Categorias:
@@ -43,37 +44,36 @@ class Empleados:
 class Proveedores:
     def __int__(self, id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria):
         self.id_proveedor = id_proveedor
-        self.nombrePr = nombrePro
+        self.nombrePro = nombrePro
         self.empresa = empresa
         self.telefonoPr = telefonoPro
         self.direccionPr = direccionPro
         self.correoPr = correoPro
         self.id_categoria = id_categoria
     def resumen(self):
-        return f"{self.id_proveedor} - {self.nombrePr} - Empresa: {self.empresa} - Tel: {self.telefonoPr} - Direccion: {self.direccionPr} - Correo: {self.correoPr} - Producto: {self.id_categoria}"
+        return f"{self.id_proveedor} - {self.nombrePro} - Empresa: {self.empresa} - Tel: {self.telefonoPr} - Direccion: {self.direccionPr} - Correo: {self.correoPr} - Producto: {self.id_categoria}"
 class Ventas:
-    def __init__(self, id_venta, fecha, nit, id_empleado, categoria):
+    def __init__(self, id_venta, fecha, cliente, empleado):
         self.id_venta = id_venta
         self.fecha = fecha
-        self.nit = nit #llave
-        self.id_empleado = id_empleado #llave
-        self.categoria = categoria #llave
+        self.cliente = cliente
+        self.empleado = empleado #llave
         self.detalles = []
         self.total = 0.0
     def agregar_detalleV(self, producto, cantidad):
         producto.actualizar_stock(cantidad, "Venta")
-        detalle = DetalleVentas(producto, cantidad)
+        detalle = DetalleVentas(len(self.detalles) + 1, self.id_venta, producto, cantidad)
         self.detalles.append(detalle)
         self.total += detalle.subtotal #total acumulado
     def resumen(self):
         return f"Venta No. {self.id_venta} | Fecha: {self.fecha} | NIT: {self.nit} | Empleado: {self.id_empleado} | Total: Q.{self.total:.2f}"
 class DetalleVentas:
-    def __init__(self, id_detalle_venta, id_venta, id_producto, cantidad):
+    def __init__(self, id_detalle_venta, id_venta, producto, cantidad):
         self.id_detalle_venta = id_detalle_venta
         self.id_venta = id_venta
-        self.id_producto = id_producto
+        self.id_producto = producto.id_producto
         self.cantidad = cantidad
-        self.precio = id_producto.precio
+        self.precio = producto.precio
         self.subtotal = self.precio * self.cantidad
     def resumen(self):
         return (f"Detalle No. {self.id_detalle_venta} | Venta No. {self.id_venta} | Producto ID: {self.id_producto} | Cantidad: {self.cantidad} |"
@@ -86,9 +86,9 @@ class Compras:
         self.empleado = id_empleado #llave
         self.detalles = []
         self.total = 0.0
-    def agregar_detalleC(self, producto, cantidad, precio_uni):
+    def agregar_detalleC(self, producto, cantidad, precio_uni, fecha_caducidad):
         producto.actualizar_stock(cantidad, "Compra")
-        detalleC = DetalleCompras(producto, cantidad, precio_uni)
+        detalleC = DetalleCompras(len(self.detalles) + 1, self.id_compra, producto, cantidad, precio_uni, fecha_caducidad)
         self.detalles.append(detalleC)
         self.total += detalleC.subtotal  #se acumula el total
     def resumen(self):
@@ -113,6 +113,7 @@ empleados = {}
 proveedores = {}
 ventas = []
 compras = []
+#agregar info
 def agregar_catecoria():
     print("\n Agregar Categoria")
     id_categoria = len(categorias)+1
@@ -123,16 +124,16 @@ def agregar_producto():
     print("\n Agregar Producto")
     id_producto = len(productos)+1
     nombre_producto = input("Nombre del producto: ")
-    precio_producto = input("Precio del producto: ")
-    print("Categorias disponibles: ")
+    precio_producto = input("Precio: ")
+    print("Categorías disponibles: ")
     for c in Categorias.values():
         print(c.resumen())
-    id_categoria = int(input("ID de la categoria: "))
+    id_categoria = int(input("ID de la categoría: "))
     categorias=Categorias.get(id_categoria)
     if not categorias:
-        print("Categoria no existe")
+        print("Categoria no encontrada")
         return
-    productos[id_producto] = Productos(id_producto, nombre_producto, precio_producto, categorias)
+    productos[id_producto] = Productos(id_producto, nombre_producto, precio_producto, id_categoria)
     print("Producto agregado")
 def informacion_cliente():
     print("\n Informacion de Cliente")
@@ -140,30 +141,31 @@ def informacion_cliente():
     if nit in clientes:
         print("El NIT ya existe")
         return
-    nombreCL = input("Nombre del cliente: ")
-    telefono = input("Telefono del cliente: ")
-    direccion = input("Direccion del cliente: ")
-    correo = input("Correo del cliente: ")
+    nombreCL = input("Nombre: ")
+    telefono = input("Teléfono: ")
+    direccion = input("Dirección: ")
+    correo = input("Correo: ")
     clientes[nit] = Clientes(nit, nombreCL, telefono, direccion, correo)
     print("Cliente agregado.")
 def informacion_empleado():
     print("\n Informacion del Empleado")
     id_empleado = len(empleados)+1
-    nombreE = input("Nombre del Empleado: ")
-    telefonoE = input("Telefono del Empleado: ")
-    direccionE = input("Direccion del Empleado: ")
-    correoE = input("Correo del Empleado: ")
+    nombreE = input("Nombre: ")
+    telefonoE = input("Teléfono: ")
+    direccionE = input("Dirección: ")
+    correoE = input("Correo: ")
     empleados[id_empleado] = Empleados(id_empleado, nombreE, telefonoE, direccionE, correoE)
     print("Empleado agregado.")
 def informacion_proveedor():
     print("\n Informacion del Proveedor")
     id_proveedor = len(proveedores)+1
-    nombrePro = input("Nombre del Proveedor: ")
+    nombrePro = input("Nombre: ")
     empresa = input("Empresa: ")
-    telefonoPro = input("Telefono del Proveedor: ")
-    direccionPro = input("Direccion del Proveedor: ")
-    correoPro = input("Correo del Proveedor: ")
-    proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro)
+    telefonoPro = input("Teléfono: ")
+    direccionPro = input("Dirección: ")
+    correoPro = input("Correo: ")
+    id_categoria = int(input("ID de la categoria que provee: "))
+    proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria)
     print("Proveedor agregado.")
 def registrar_venta():
     print("\n Informacion de la Venta")
