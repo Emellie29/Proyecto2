@@ -237,11 +237,11 @@ def mostrar_menu():
     print("8. Consultar inventario")
     print("9. Salir")
 def ejecutar_opcion(opcion):
-    if opcion == 1:
+    if opcion == "1":
         agregar_catecoria()
-    elif opcion == 2:
+    elif opcion == "2":
         agregar_producto()
-    elif opcion == 3:
+    elif opcion == "3":
         informacion_cliente()
     elif opcion == "4":
         informacion_empleado()
@@ -254,10 +254,10 @@ def ejecutar_opcion(opcion):
     elif opcion == "8":
         consultar_inventario()
     elif opcion == "9":
-        print("👋 Cerrando el sistema. ¡Hasta pronto!")
+        print("Cerrando el sistema. ¡Hasta pronto!")
         exit()
     else:
-        print("❌ Opción inválida.")
+        print("Opción inválida.")
 def iniciar_sistema():
     while True:
         mostrar_menu()
