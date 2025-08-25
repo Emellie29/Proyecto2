@@ -41,13 +41,13 @@ class Empleados:
     def resumen(self):
         return f"{self.id_empleado} - {self.nombreE} - Tel: {self.telefonoE} - Dirección: {self.direccionE} - Correo: {self.correoE}"
 class Proveedores:
-    def __int__(self, id_proveedor, nombrePr, empresa, telefonoPr, direccionPr, correoPr, id_categoria):
+    def __int__(self, id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria):
         self.id_proveedor = id_proveedor
-        self.nombrePr = nombrePr
+        self.nombrePr = nombrePro
         self.empresa = empresa
-        self.telefonoPr = telefonoPr
-        self.direccionPr = direccionPr
-        self.correoPr = correoPr
+        self.telefonoPr = telefonoPro
+        self.direccionPr = direccionPro
+        self.correoPr = correoPro
         self.id_categoria = id_categoria
     def resumen(self):
         return f"{self.id_proveedor} - {self.nombrePr} - Empresa: {self.empresa} - Tel: {self.telefonoPr} - Direccion: {self.direccionPr} - Correo: {self.correoPr} - Producto: {self.id_categoria}"
@@ -110,7 +110,7 @@ categorias = {}
 productos = {}
 clientes = {}
 empleados = {}
-proveedors = {}
+proveedores = {}
 ventas = []
 compras = []
 def agregar_catecoria():
@@ -138,7 +138,7 @@ def informacion_cliente():
     print("\n Informacion de Cliente")
     nit = input("NIT: ")
     if nit in clientes:
-        print("El cliente ya existe")
+        print("El NIT ya existe")
         return
     nombreCL = input("Nombre del cliente: ")
     telefono = input("Telefono del cliente: ")
@@ -157,3 +157,109 @@ def informacion_empleado():
     print("Empleado agregado.")
 def informacion_proveedor():
     print("\n Informacion del Proveedor")
+    id_proveedor = len(proveedores)+1
+    nombrePro = input("Nombre del Proveedor: ")
+    empresa = input("Empresa: ")
+    telefonoPro = input("Telefono del Proveedor: ")
+    direccionPro = input("Direccion del Proveedor: ")
+    correoPro = input("Correo del Proveedor: ")
+    proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro)
+    print("Proveedor agregado.")
+def registrar_venta():
+    print("\n Informacion de la Venta")
+    nit = int(input("NIT: "))
+    id_empleado = int(input("Empleado: "))
+    fecha = input("Fecha (YYYY-MM-DD): ")
+    cliente = clientes.get(nit)
+    empleado = empleados.get(id_empleado)
+    if not cliente or not empleado:
+        print("El cliente o empleado no encontrado.")
+        return
+    venta = Ventas(len(ventas) + 1, cliente, empleado, fecha)
+    while True:
+        id_producto = int(input("ID producto: "))
+        producto = productos.get(id_producto)
+        if not producto:
+            print("El producto no existe")
+            continue
+        cantidad = int(input("Cantidad del producto: "))
+        try:
+            venta.agregar_detalleV(producto, cantidad)
+            print("Producto agregado.")
+        except ValueError as e:
+            print(f"El producto no existe: {e}")
+        if input("¿Desea agregar otro producto? [S/N]: ").lower() != "s":
+            break
+    ventas.append(venta)
+    print(f"Venta agregada con exito. Total: Q{Ventas.total:.2f}")
+def registrar_compra():
+    print("\n Informacion de la Compra")
+    id_proveedor = int(input("ID proveedor: "))
+    id_empleado = int(input("ID empleado: "))
+    Fecha = input("Fecha (YYYY-MM-DD): ")
+    proveedor = proveedores.get(id_proveedor)
+    empleado = empleados.get(id_empleado)
+    if not proveedor or not empleado:
+        print("Proveedor o empleado no encontrado.")
+        return
+    compra = Compras(len(compras) + 1, proveedor, empleado, Fecha)
+    while True:
+        id_producto = int(input("ID producto: "))
+        producto = productos.get(id_producto)
+        if not producto:
+            print("Producto no existe.")
+            continue
+        cantidad = int(input("Cantidad: "))
+        precio_unitario = int(input("Precio unitario: Q."))
+        compra.agregar_detalleC(producto, cantidad, precio_unitario)
+        print("Producto agregado.")
+        if input("¿Agregar otro producto? [S/N]: ").lower() != "s":
+            break
+        compras.append(compra)
+        print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
+def consultar_inventario():
+    print("\nInventario actual.")
+    for p in productos.values():
+        print(p.resumen())
+def mostrar_menu():
+    print("\n" + "="*40)
+    print("Menú Principal")
+    print("="*40)
+    print("1. Agregar categoría")
+    print("2. Agregar producto")
+    print("3. Agregar cliente")
+    print("4. Agregar empleado")
+    print("5. Agregar proveedor")
+    print("6. Registrar compra")
+    print("7. Registrar venta")
+    print("8. Consultar inventario")
+    print("9. Salir")
+def ejecutar_opcion(opcion):
+    if opcion == 1:
+        agregar_catecoria()
+    elif opcion == 2:
+        agregar_producto()
+    elif opcion == 3:
+        informacion_cliente()
+    elif opcion == "4":
+        informacion_empleado()
+    elif opcion == "5":
+        informacion_proveedor()
+    elif opcion == "6":
+        registrar_compra()
+    elif opcion == "7":
+        registrar_venta()
+    elif opcion == "8":
+        consultar_inventario()
+    elif opcion == "9":
+        print("👋 Cerrando el sistema. ¡Hasta pronto!")
+        exit()
+    else:
+        print("❌ Opción inválida.")
+def iniciar_sistema():
+    while True:
+        mostrar_menu()
+        opcion = input("Selecciona una opción: ").strip()
+        ejecutar_opcion(opcion)
+if __name__ == "__main__":
+    iniciar_sistema()
