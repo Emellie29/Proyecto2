@@ -1,8 +1,8 @@
 class Productos:
-    def __init__(self, id_producto, nombreP, precio, id_categoria, totalventas=0, totalcompras=0):
+    def __init__(self, id_producto, nombreP, precioP, id_categoria, totalventas=0, totalcompras=0):
         self.id_producto = id_producto
         self.nombreP = nombreP
-        self.precio = precio
+        self.precioP = precioP
         self.stock = 0
         self.id_categoria = id_categoria #llave
         self.totalventas = totalventas
@@ -16,13 +16,15 @@ class Productos:
             self.stock -= cantidad
             self.totalventas += cantidad
     def resumen(self):
-        return f"{self.id_producto} - {self.nombre} - Q.{self.precio} - {self.stock}"
+        return f"{self.id_producto} - {self.nombreP} - Q.{self.precio} - {self.stock}"
+
 class Categorias:
     def __init__(self, id_categoria, nombreCate):
         self.id_categoria = id_categoria
         self.nombreCate = nombreCate
     def resumen(self):
         return f"{self.id_categoria} - {self.nombreCate}"
+
 class Clientes:
     def __init__(self, nit, nombreCl, telefono, direccion, correo):
         self.nit = nit
@@ -32,6 +34,7 @@ class Clientes:
         self.correo = correo
     def resumen(self):
         return f"NIT: {self.nit} - {self.nombreCl} - Tel: {self.telefono} - Dirección: {self.direccion} - Correo: {self.correo}"
+
 class Empleados:
     def __init__(self, id_empleado, nombreE, telefonoE, direccionE, correoE):
         self.id_empleado = id_empleado
@@ -41,6 +44,7 @@ class Empleados:
         self.correoE = correoE
     def resumen(self):
         return f"{self.id_empleado} - {self.nombreE} - Tel: {self.telefonoE} - Dirección: {self.direccionE} - Correo: {self.correoE}"
+
 class Proveedores:
     def __int__(self, id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria):
         self.id_proveedor = id_proveedor
@@ -52,6 +56,7 @@ class Proveedores:
         self.id_categoria = id_categoria
     def resumen(self):
         return f"{self.id_proveedor} - {self.nombrePro} - Empresa: {self.empresa} - Tel: {self.telefonoPr} - Direccion: {self.direccionPr} - Correo: {self.correoPr} - Producto: {self.id_categoria}"
+
 class Ventas:
     def __init__(self, id_venta, fecha, cliente, empleado):
         self.id_venta = id_venta
@@ -67,6 +72,7 @@ class Ventas:
         self.total += detalle.subtotal #total acumulado
     def resumen(self):
         return f"Venta No. {self.id_venta} | Fecha: {self.fecha} | NIT: {self.nit} | Empleado: {self.id_empleado} | Total: Q.{self.total:.2f}"
+
 class DetalleVentas:
     def __init__(self, id_detalle_venta, id_venta, producto, cantidad):
         self.id_detalle_venta = id_detalle_venta
@@ -78,6 +84,7 @@ class DetalleVentas:
     def resumen(self):
         return (f"Detalle No. {self.id_detalle_venta} | Venta No. {self.id_venta} | Producto ID: {self.id_producto} | Cantidad: {self.cantidad} |"
                 f"Precio: Q.{self.precio:.2f} | Subtotal: {self.subtotal:.2f}")
+
 class Compras:
     def __init__(self, id_compra, fecha, id_proveedor, id_empleado):
         self.id_compra = id_compra
@@ -93,6 +100,7 @@ class Compras:
         self.total += detalleC.subtotal  #se acumula el total
     def resumen(self):
         return f"Compra No. {self.id_compra} | Fecha: {self.fecha} | Proveedor: {self.proveedor} | Empleado: {self.empleado} | Total: Q.{self.total:.2f}"
+
 class DetalleCompras:
     def __init__(self, id_detalle_compra,id_compra, id_producto, cantidad, precio_compra, fecha_caducidad):
         self.id_detalle_compra = id_detalle_compra
@@ -105,7 +113,7 @@ class DetalleCompras:
     def resumen(self):
         return (f" Detalla No. {self.id_detalle_compra} | Compra No. {self.id_compra} | Producto ID: {self.id_producto} | Cantidad: {self.cantidad} |"
                 f"Precio: Q.{self.precio_compra:.2f} | Subtotal: Q.{self.subtotal:.2f} | Caduca: {self.fecha_caducidad}")
-#diccionarios
+#agregar info
 categorias = {}
 productos = {}
 clientes = {}
@@ -113,28 +121,30 @@ empleados = {}
 proveedores = {}
 ventas = []
 compras = []
-#agregar info
+
 def agregar_catecoria():
     print("\n Agregar Categoria")
     id_categoria = len(categorias)+1
-    nombre_categoria = input("Nombre de la categoria: ")
-    categorias[id_categoria] = categorias(id_categoria, nombre_categoria)
+    nombreCate = input("Nombre de la categoria: ")
+    #categorias[id_categoria] = categorias(id_categoria, nombreCate)
     print("Categoria agregada con exito.")
+
 def agregar_producto():
     print("\n Agregar Producto")
     id_producto = len(productos)+1
-    nombre_producto = input("Nombre del producto: ")
-    precio_producto = input("Precio: ")
+    nombreP = input("Nombre del producto: ")
+    precioP = int(input("Precio: "))
     print("Categorías disponibles: ")
     for c in Categorias.values():
         print(c.resumen())
     id_categoria = int(input("ID de la categoría: "))
-    categorias=Categorias.get(id_categoria)
-    if not categorias:
+    categoria = Categorias.get(id_categoria)
+    if not categoria:
         print("Categoria no encontrada")
         return
-    productos[id_producto] = Productos(id_producto, nombre_producto, precio_producto, id_categoria)
+    productos[id_producto] = Productos(id_producto, nombreP, precioP, id_categoria)
     print("Producto agregado")
+
 def informacion_cliente():
     print("\n Informacion de Cliente")
     nit = input("NIT: ")
@@ -147,6 +157,7 @@ def informacion_cliente():
     correo = input("Correo: ")
     clientes[nit] = Clientes(nit, nombreCL, telefono, direccion, correo)
     print("Cliente agregado.")
+
 def informacion_empleado():
     print("\n Informacion del Empleado")
     id_empleado = len(empleados)+1
@@ -156,6 +167,7 @@ def informacion_empleado():
     correoE = input("Correo: ")
     empleados[id_empleado] = Empleados(id_empleado, nombreE, telefonoE, direccionE, correoE)
     print("Empleado agregado.")
+
 def informacion_proveedor():
     print("\n Informacion del Proveedor")
     id_proveedor = len(proveedores)+1
@@ -167,6 +179,7 @@ def informacion_proveedor():
     id_categoria = int(input("ID de la categoria que provee: "))
     proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria)
     print("Proveedor agregado.")
+
 def registrar_venta():
     print("\n Informacion de la Venta")
     nit = int(input("NIT: "))
@@ -194,6 +207,7 @@ def registrar_venta():
             break
     ventas.append(venta)
     print(f"Venta agregada con exito. Total: Q{Ventas.total:.2f}")
+
 def registrar_compra():
     print("\n Informacion de la Compra")
     id_proveedor = int(input("ID proveedor: "))
@@ -219,14 +233,14 @@ def registrar_compra():
             break
         compras.append(compra)
         print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
+
 def consultar_inventario():
     print("\nInventario actual.")
     for p in productos.values():
         print(p.resumen())
-def mostrar_menu():
-    print("\n" + "="*40)
-    print("Menú Principal")
-    print("="*40)
+
+while True:
+    print("•••••••Menú Principal•••••••")
     print("1. Agregar categoría")
     print("2. Agregar producto")
     print("3. Agregar cliente")
@@ -236,32 +250,26 @@ def mostrar_menu():
     print("7. Registrar venta")
     print("8. Consultar inventario")
     print("9. Salir")
-def ejecutar_opcion(opcion):
-    if opcion == "1":
-        agregar_catecoria()
-    elif opcion == "2":
-        agregar_producto()
-    elif opcion == "3":
-        informacion_cliente()
-    elif opcion == "4":
-        informacion_empleado()
-    elif opcion == "5":
-        informacion_proveedor()
-    elif opcion == "6":
-        registrar_compra()
-    elif opcion == "7":
-        registrar_venta()
-    elif opcion == "8":
-        consultar_inventario()
-    elif opcion == "9":
-        print("Cerrando el sistema. ¡Hasta pronto!")
-        exit()
-    else:
-        print("Opción inválida.")
-def iniciar_sistema():
-    while True:
-        mostrar_menu()
-        opcion = input("Selecciona una opción: ").strip()
-        ejecutar_opcion(opcion)
-if __name__ == "__main__":
-    iniciar_sistema()
+    opcion = input("Selecciona una opción: ").strip()
+    match (opcion):
+        case "1":
+            agregar_catecoria()
+        case "2":
+            agregar_producto()
+        case "3":
+            informacion_cliente()
+        case "4":
+            informacion_empleado()
+        case "5":
+            informacion_proveedor()
+        case "6":
+            registrar_compra()
+        case "7":
+            registrar_venta()
+        case "8":
+            consultar_inventario()
+        case "9":
+            print("Cerrando el sistema. ¡Hasta pronto!")
+            exit()
+        case _:
+            print("Opción inválida, intente de nuevo.")
