@@ -314,7 +314,7 @@ def consultar_inventario():
 while True:
     print("•••••••Menú Principal•••••••")
     print("1. Área de Bodega.")
-    print("2. Cajero.")
+    print("2. Área de Cajas.")
     print("3. Gerencia.")
     print("4. Salir")
     opcion = input("Selecciona una opción: ").strip()
