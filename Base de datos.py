@@ -16,7 +16,7 @@ class Productos:
             self.stock -= cantidad
             self.totalventas += cantidad
     def resumen(self):
-        return f"{self.id_producto} - {self.nombreP} - Q.{self.precio} - {self.stock}"
+        return f"{self.id_producto} - {self.nombreP} - Q.{self.precio:.2f} - Stock: {self.stock}"
 
 class Categorias:
     def __init__(self, id_categoria, nombreCate):
@@ -87,9 +87,10 @@ class Ventas:
             self.ahorro_total = 0.0
         self.ahorro_total += ahorro
     def resumen(self):
-        return (f"Venta No. {self.id_venta} | Fecha: {self.fecha} | Cliente: {self.cliente.nombre} | "
-            f"Empleado: {self.empleado.nombre} | Total: Q.{self.total:.2f} | "
+        return (f"Venta No. {self.id_venta} | Fecha: {self.fecha} | Cliente: {self.cliente.nombreCl} | "
+            f"Empleado: {self.empleado.nombreE} | Total: Q.{self.total:.2f} | "
             f"Ahorro por ofertas: Q.{self.ahorro_total:.2f}")
+
 class DetalleVentas:
     def __init__(self, id_detalle_venta, id_venta, producto, cantidad):
         self.id_detalle_venta = id_detalle_venta
@@ -106,8 +107,8 @@ class Compras:
     def __init__(self, id_compra, fecha, id_proveedor, id_empleado):
         self.id_compra = id_compra
         self.fecha = fecha
-        self.proveedor = id_proveedor #llave
-        self.empleado = id_empleado #llave
+        self.id_proveedor = id_proveedor #llave
+        self.id_empleado = id_empleado #llave
         self.detalles = []
         self.total = 0.0
     def agregar_detalleC(self, producto, cantidad, precio_uni, fecha_caducidad):
@@ -116,8 +117,12 @@ class Compras:
         self.detalles.append(detalleC)
         self.total += detalleC.subtotal  #se acumula el total
     def resumen(self):
-        return (f"Compra No. {self.id_compra} | Fecha: {self.fecha} | Proveedor: {self.proveedor} | "
-               f"Empleado: {self.empleado} | Total: Q.{self.total:.2f}")
+        proveedor = proveedores.get(self.id_proveedor)
+        empleado = empleados.get(self.id_empleado)
+        nombre_proveedor = proveedor.nombrePro if proveedor else "Desconocido"
+        nombre_empleado = empleado.nombreE if empleado else "Desconocido"
+        return (f"Compra No. {self.id_compra} | Fecha: {self.fecha} | "
+                f"Proveedor: {nombre_proveedor} | Empleado: {nombre_empleado} | Total: Q.{self.total:.2f}")
 
 class DetalleCompras:
     def __init__(self, id_detalle_compra,id_compra, id_producto, cantidad, precio_compra, fecha_caducidad):
@@ -153,7 +158,7 @@ def agregar_producto():
     print("\nAgregar Producto")
     id_producto = len(productos) + 1
     nombreP = input("Nombre del producto: ")
-    precioP = int(input("Precio: "))
+    precioP = int(input("Precio: Q."))
     print("Categorías disponibles:")
     for c in categorias.values():
         print(c.resumen())
@@ -210,7 +215,10 @@ def informacion_proveedor():
 
 def registrar_venta():
     print("\nInformación de la Venta")
-    nit = int(input("NIT: "))
+    nit = input("NIT: ").strip()
+    print("Empleados disponibles:")
+    for e in empleados.values():
+        print(f"ID: {e.id_empleado} - Nombre: {e.nombreE}")
     id_empleado = int(input("ID del empleado: "))
     fecha = input("Fecha (YYYY-MM-DD): ")
     cliente = clientes.get(nit)
@@ -267,8 +275,8 @@ def registrar_compra():
         print("Producto agregado.")
         if input("¿Agregar otro producto? [S/N]: ").lower() != "s":
             break
-        compras.append(compra)
-        print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
+    compras.append(compra)
+    print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
 
 def mostrar_compras():
     print("Listado de Compras")
@@ -276,17 +284,24 @@ def mostrar_compras():
         print("No hay compras registradas.")
         return
     for compra in compras:
-        print(f"\nID Compra: {compra.id}")
+        proveedor = proveedores.get(compra.id_proveedor)
+        empleado = empleados.get(compra.id_empleado)
+        nombre_proveedor = proveedor.nombrePro if proveedor else "Desconocido"
+        nombre_empleado = empleado.nombreE if empleado else "Desconocido"
+        print(f"\nID Compra: {compra.id_compra}")
         print(f"Fecha: {compra.fecha}")
-        print(f"Proveedor: {compra.proveedor.nombre}")
-        print(f"Empleado: {compra.empleado.nombre}")
+        print(f"Proveedor: {nombre_proveedor}")
+        print(f"Empleado: {nombre_empleado}")
         print(f"Total: Q{compra.total:.2f}")
         print("Detalles:")
         for detalle in compra.detalles:
-            print(f"  - Producto: {detalle['producto'].nombre}")
-            print(f"    Cantidad: {detalle['cantidad']}")
-            print(f"    Precio Unitario: Q{detalle['precio_unitario']}")
-            print(f"    Subtotal: Q{detalle['subtotal']:.2f}")
+            producto = detalle.producto  # ← accede al objeto directamente
+            nombre_producto = producto.nombreP if producto else "Producto desconocido"
+            print(f"  - Producto: {nombre_producto}")
+            print(f"    Cantidad: {detalle.cantidad}")
+            print(f"    Precio Unitario: Q{detalle.precio_compra}")
+            print(f"    Subtotal: Q{detalle.subtotal:.2f}")
+            print(f"    Caducidad: {detalle.fecha_caducidad}")
 
 def mostrar_ventas():
     print("Listado de Ventas")
@@ -294,32 +309,56 @@ def mostrar_ventas():
         print("No hay ventas registradas.")
         return
     for venta in ventas:
-        print(f"ID Venta: {venta.id}")
+        print(f"\nID Venta: {venta.id_venta}")
         print(f"Fecha: {venta.fecha}")
         print(f"Cliente: {venta.cliente.nombre}")
         print(f"Empleado: {venta.empleado.nombre}")
         print(f"Total: Q{venta.total:.2f}")
         print("Detalles:")
-        for detalle in venta.detalles:
-            print(f"  - Producto: {detalle['producto'].nombre}")
-            print(f"    Cantidad: {detalle['cantidad']}")
-            print(f"    Precio Unitario: Q{detalle['precio_unitario']}")
-            print(f"    Subtotal: Q{detalle['subtotal']:.2f}")
+        for detalle in venta.detalles_ventas:
+            print(f"  - Producto: {detalle.producto.nombre}")
+            print(f"    Cantidad: {detalle.cantidad}")
+            print(f"    Precio Unitario: Q{detalle.precio}")
+            print(f"    Subtotal: Q{detalle.subtotal:.2f}")
 
 def consultar_inventario():
-    print("\nInventario actual.")
+    print("INVENTARIO ACTUAL")
+    print(f"{'ID':<5} {'Nombre':<20} {'Precio (Q)':<12} {'Stock':<8} {'Categoría':<20}")
     for p in productos.values():
-        print(p.resumen())
+        if p.stock > 0:  # Solo muestra productos disponibles
+            nombre_categoria = categorias[p.id_categoria].nombre if p.id_categoria in categorias else "Sin categoría"
+            print(f"{p.id_producto:<5} {p.nombreP:<20} Q{p.precio:<11.2f} {p.stock:<8} {nombre_categoria:<20}")
 
 while True:
     print("•••••••Menú Principal•••••••")
-    print("1. Área de Bodega.")
-    print("2. Área de Cajas.")
-    print("3. Gerencia.")
+    print("1. Gerencia.")
+    print("2. Área de Bodega.")
+    print("3. Área de Cajas.")
     print("4. Salir")
     opcion = input("Selecciona una opción: ").strip()
     match (opcion):
         case "1":
+            while True:
+                print("Bienvenido a Gerencia.")
+                print("1. Agregar empleado.")
+                print("2. Consultar inventario.")
+                print("3. Mostrar ventas.")
+                print("4. Mostrar compras.")
+                print("5. Regresar al menú principal.")
+                opcion_gerencia = input("Seleccione una opción: ").strip()
+                if opcion_gerencia == "1":
+                    informacion_empleado()
+                elif opcion_gerencia == "2":
+                    consultar_inventario()
+                elif opcion_gerencia == "3":
+                    mostrar_ventas()
+                elif opcion_gerencia == "4":
+                    mostrar_compras()
+                elif opcion_gerencia == "5":
+                    break
+                else:
+                    print("Opción inválida, intente de nuevo.")
+        case "2":
             while True:
                 print("Bienvenido al área de bodega")
                 print("1. Agregar categoría.")
@@ -343,7 +382,7 @@ while True:
                     break
                 else:
                     print("Opción inválida, intente de nuevo.")
-        case "2":
+        case "3":
             while True:
                 print("Bienvenido al área de cajas.")
                 print("1. Agregar cliente.")
@@ -361,27 +400,6 @@ while True:
                 elif opcion_cajas == "4":
                     mostrar_ventas()
                 elif opcion_cajas == "5":
-                    break
-                else:
-                    print("Opción inválida, intente de nuevo.")
-        case "3":
-            while True:
-                print("Bienvenido a Gerencia.")
-                print("1. Agregar empleado.")
-                print("2. Consultar inventario.")
-                print("3. Mostrar ventas.")
-                print("4. Mostrar compras.")
-                print("5. Regresar al menú principal.")
-                opcion_gerencia = input("Seleccione una opción: ").strip()
-                if opcion_gerencia == "1":
-                    informacion_empleado()
-                elif opcion_gerencia == "2":
-                    consultar_inventario()
-                elif opcion_gerencia == "3":
-                    mostrar_ventas()
-                elif opcion_gerencia == "4":
-                    mostrar_compras()
-                elif opcion_gerencia == "5":
                     break
                 else:
                     print("Opción inválida, intente de nuevo.")
