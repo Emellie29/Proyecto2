@@ -217,9 +217,7 @@ def informacion_proveedor():
     if id_categoria not in categorias:
         print("Categoría no encontrada.")
         return
-    proveedores[id_proveedor] = Proveedores(
-        id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria
-    )
+    proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria)
     print("Proveedor agregado con éxito.")
 
 def registrar_venta():
