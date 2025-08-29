@@ -16,7 +16,7 @@ class Productos:
             self.stock -= cantidad
             self.totalventas += cantidad
     def resumen(self):
-        return f"{self.id_producto} - {self.nombreP} - Q.{self.precio:.2f} - Stock: {self.stock}"
+        return f"{self.id_producto} - {self.nombreP} - Q.{self.precioP:.2f} - Stock: {self.stock}"
 
 class Categorias:
     def __init__(self, id_categoria, nombreCate):
@@ -226,7 +226,9 @@ def registrar_venta():
     if not cliente or not empleado:
         print("El cliente o empleado no fue encontrado.")
         return
-    venta = Ventas(len(ventas) + 1, cliente, empleado, fecha)
+    venta = Ventas(len(ventas) + 1, fecha, cliente, empleado)
+    if input("¿Desea registrar una oferta antes de vender? [S/N]: ").lower() == "s":
+        registrar_oferta()
     while True:
         id_producto = int(input("ID del producto: "))
         producto = productos.get(id_producto)
@@ -234,8 +236,7 @@ def registrar_venta():
             print("El producto no existe.")
             continue
         cantidad = int(input("Cantidad del producto: "))
-        precio_unitario = producto.precio
-        # Verifico si hay oferta
+        precio_unitario = producto.precioP
         descuento = ofertas.get(id_producto, 0)
         precio_final = precio_unitario * (1 - descuento / 100)
         print(f"Descuento aplicado: {descuento}%")
@@ -251,17 +252,32 @@ def registrar_venta():
     print(f"Venta agregada con éxito. Total: Q{venta.total:.2f}")
     print(f"Ahorro total por ofertas: Q{venta.ahorro_total:.2f}")
 
+def registrar_oferta():
+    print("Registrar Oferta")
+    id_producto = int(input("ID del producto: "))
+    producto = productos.get(id_producto)
+    if not producto:
+        print("El producto no existe.")
+        return
+    print(f"Producto seleccionado: {producto.nombreP}")
+    descuento = float(input("Porcentaje de descuento (%): "))
+    if descuento < 0 or descuento > 100:
+        print("El descuento debe estar entre 0 y 100.")
+        return
+    ofertas[id_producto] = descuento
+    print(f"Oferta registrada: {descuento}% para el producto '{producto.nombreP}' (ID: {id_producto})")
+
 def registrar_compra():
     print("\n Informacion de la Compra")
     id_proveedor = int(input("ID proveedor: "))
     id_empleado = int(input("ID empleado: "))
-    Fecha = input("Fecha (YYYY-MM-DD): ")
+    fecha = input("Fecha (YYYY-MM-DD): ").strip()
     proveedor = proveedores.get(id_proveedor)
     empleado = empleados.get(id_empleado)
     if not proveedor or not empleado:
         print("Proveedor o empleado no encontrado.")
         return
-    compra = Compras(len(compras) + 1, proveedor, empleado, Fecha)
+    compra = Compras(len(compras) + 1, fecha, id_proveedor, id_empleado)
     while True:
         id_producto = int(input("ID producto: "))
         producto = productos.get(id_producto)
@@ -273,7 +289,7 @@ def registrar_compra():
         fecha_caducidad = input("Fecha de caducidad del producto (YYYY-MM-DD): ")
         compra.agregar_detalleC(producto, cantidad, precio_unitario, fecha_caducidad)
         print("Producto agregado.")
-        if input("¿Agregar otro producto? [S/N]: ").lower() != "s":
+        if input("¿Desea agregar otro producto? [S/N]: ").lower() != "s":
             break
     compras.append(compra)
     print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
@@ -286,7 +302,7 @@ def mostrar_compras():
     for compra in compras:
         proveedor = proveedores.get(compra.id_proveedor)
         empleado = empleados.get(compra.id_empleado)
-        nombre_proveedor = proveedor.nombrePro if proveedor else "Desconocido"
+        nombre_proveedor = proveedor.nombre_Pro if proveedor else "Desconocido"
         nombre_empleado = empleado.nombreE if empleado else "Desconocido"
         print(f"\nID Compra: {compra.id_compra}")
         print(f"Fecha: {compra.fecha}")
@@ -311,18 +327,19 @@ def mostrar_ventas():
     for venta in ventas:
         print(f"\nID Venta: {venta.id_venta}")
         print(f"Fecha: {venta.fecha}")
-        print(f"Cliente: {venta.cliente.nombre}")
-        print(f"Empleado: {venta.empleado.nombre}")
+        print(f"Cliente: {venta.cliente.nombreCl}")
+        print(f"Empleado: {venta.empleado.nombreE}")
         print(f"Total: Q{venta.total:.2f}")
         print("Detalles:")
-        for detalle in venta.detalles_ventas:
+        for detalle in venta.detalles:
             print(f"  - Producto: {detalle.producto.nombre}")
             print(f"    Cantidad: {detalle.cantidad}")
             print(f"    Precio Unitario: Q{detalle.precio}")
             print(f"    Subtotal: Q{detalle.subtotal:.2f}")
 
 def consultar_inventario():
-    print("INVENTARIO ACTUAL")
+    print("Inventario Actual")
+    print(f"Productos registrados: {len(productos)}")
     print(f"{'ID':<5} {'Nombre':<20} {'Precio (Q)':<12} {'Stock':<8} {'Categoría':<20}")
     for p in productos.values():
         if p.stock > 0:  # Solo muestra productos disponibles
