@@ -565,7 +565,6 @@ while True:
                     print("Opción inválida, intente de nuevo.")
         case "4":
             print("Cerrando el sistema. ¡Hasta pronto!")
-            guardar_todo()
             exit()
         case _:
             print("Opción inválida, intente de nuevo.")
