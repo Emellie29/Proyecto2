@@ -69,7 +69,7 @@ class Ventas:
         self.detalles = []
         self.total = 0.0
     def agregar_detalleV(self, producto, cantidad, precio_unitario, descuento=0):
-        producto.actualizar_stock(cantidad, "Venta")
+        producto.actualizar_stock(cantidad, "venta")
         subtotal = cantidad * precio_unitario
         precio_original = precio_unitario / (1 - descuento / 100) if descuento > 0 else precio_unitario
         ahorro = cantidad * (precio_original - precio_unitario)
@@ -112,7 +112,7 @@ class Compras:
         self.detalles = []
         self.total = 0.0
     def agregar_detalleC(self, producto, cantidad, precio_uni, fecha_caducidad):
-        producto.actualizar_stock(cantidad, "Compra")
+        producto.actualizar_stock(cantidad, "compra")
         detalleC = DetalleCompras(len(self.detalles) + 1, self.id_compra, producto, cantidad, precio_uni, fecha_caducidad)
         self.detalles.append(detalleC)
         self.total += detalleC.subtotal  #se acumula el total
@@ -146,6 +146,15 @@ proveedores = {}
 ofertas = {}
 ventas = []
 compras = []
+#cargar .txt´s
+def cargar_todo():
+    cargar_productos()
+    cargar_clientes()
+    cargar_empleados()
+    cargar_categorias()
+    cargar_proveedores()
+    cargar_ventas()
+    cargar_compras()
 #agregar info
 def agregar_categoria():
     print("\nAgregar Categoría")
@@ -332,20 +341,169 @@ def mostrar_ventas():
         print(f"Total: Q{venta.total:.2f}")
         print("Detalles:")
         for detalle in venta.detalles:
-            print(f"  - Producto: {detalle.producto.nombre}")
-            print(f"    Cantidad: {detalle.cantidad}")
-            print(f"    Precio Unitario: Q{detalle.precio}")
-            print(f"    Subtotal: Q{detalle.subtotal:.2f}")
-
+            producto = detalle["producto"]
+            print(f"  - Producto: {producto.nombreP}")
+            print(f"    Precio Unitario: Q{detalle['precio_unitario']:.2f}")
+            print(f"    Subtotal: Q{detalle['subtotal']:.2f}")
+            print(f"    Descuento aplicado: {detalle['descuento']}%")
 def consultar_inventario():
     print("Inventario Actual")
-    print(f"Productos registrados: {len(productos)}")
-    print(f"{'ID':<5} {'Nombre':<20} {'Precio (Q)':<12} {'Stock':<8} {'Categoría':<20}")
-    for p in productos.values():
-        if p.stock > 0:  # Solo muestra productos disponibles
-            nombre_categoria = categorias[p.id_categoria].nombre if p.id_categoria in categorias else "Sin categoría"
-            print(f"{p.id_producto:<5} {p.nombreP:<20} Q{p.precio:<11.2f} {p.stock:<8} {nombre_categoria:<20}")
+    print(f"Productos registrados: {len(productos)}\n")
+    if not productos:
+        print("No hay productos registrados.")
+        return
+    for producto in productos.values():
+        nombre_cate = categorias[producto.id_categoria].nombreCate if producto.id_categoria in categorias else "Sin categoría"
+        print(f"•Producto ID: {producto.id_producto}")
+        print(f"    Nombre: {producto.nombreP}")
+        print(f"    Precio Unitario: Q{producto.precioP:.2f}")
+        print(f"    Stock Disponible: {producto.stock}")
+        print(f"    Categoría: {nombre_cate}")
+        print(f"    Total Compras: {producto.totalcompras}")
+        print(f"    Total Ventas: {producto.totalventas}")
+#.txt´s
+def guardar_productos():
+    with open("productos.txt", "w", encoding="utf-8") as f:
+        for p in productos.values():
+            f.write(f"{p.id_producto}|{p.nombreP}|{p.precioP}|{p.stock}|{p.id_categoria}|{p.totalventas}|{p.totalcompras}\n")
+def cargar_productos():
+    try:
+        with open("productos.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                idp, nombre, precio, stock, cat, ventas, compras = linea.strip().split("|")
+                producto = Productos(int(idp), nombre, float(precio), int(cat), int(ventas), int(compras))
+                producto.stock = int(stock)
+                productos[int(idp)] = producto
+    except FileNotFoundError:
+        print("productos.txt no encontrado.")
 
+def guardar_categorias():
+    with open("categorias.txt", "w", encoding="utf-8") as f:
+        for c in categorias.values():
+            f.write(f"{c.id_categoria}|{c.nombreC}\n")
+
+def cargar_categorias():
+    try:
+        with open("categorias.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                idc, nombre = linea.strip().split("|")
+                categorias[int(idc)] = Categorias(int(idc), nombre)
+    except FileNotFoundError:
+        print("categorias.txt no encontrado.")
+
+def guardar_clientes():
+    with open("clientes.txt", "w", encoding="utf-8") as f:
+        for c in clientes.values():
+            f.write(f"{c.nit}|{c.nombreCl}|{c.direccion}\n")
+
+def cargar_clientes():
+    try:
+        with open("clientes.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                nit, nombre, direccion = linea.strip().split("|")
+                clientes[nit] = Clientes(nit, nombre, direccion)
+    except FileNotFoundError:
+        print("clientes.txt no encontrado.")
+
+def guardar_empleados():
+    with open("empleados.txt", "w", encoding="utf-8") as f:
+        for e in empleados.values():
+            f.write(f"{e.id_empleado}|{e.nombreE}|{e.puesto}\n")
+
+def cargar_empleados():
+    try:
+        with open("empleados.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                ide, nombre, puesto = linea.strip().split("|")
+                empleados[int(ide)] = Empleados(int(ide), nombre, puesto)
+    except FileNotFoundError:
+        print("empleados.txt no encontrado.")
+
+def guardar_proveedores():
+    with open("proveedores.txt", "w", encoding="utf-8") as f:
+        for p in proveedores.values():
+            f.write(f"{p.id_proveedor}|{p.nombreP}|{p.telefono}|{p.direccion}\n")
+
+def cargar_proveedores():
+    try:
+        with open("proveedores.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                idp, nombre, tel, dir = linea.strip().split("|")
+                proveedores[int(idp)] = Proveedores(int(idp), nombre, tel, dir)
+    except FileNotFoundError:
+        print("proveedores.txt no encontrado.")
+
+def guardar_ventas():
+    with open("ventas.txt", "w", encoding="utf-8") as f:
+        for v in ventas:
+            f.write(f"{v.id_venta}|{v.fecha}|{v.cliente.nit}|{v.empleado.id_empleado}|{v.total}\n")
+
+def cargar_ventas():
+    try:
+        with open("ventas.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                idv, fecha, nit, ide, total = linea.strip().split("|")
+                cliente = clientes.get(nit)
+                empleado = empleados.get(int(ide))
+                venta = Ventas(int(idv), fecha, cliente, empleado)
+                venta.total = float(total)
+                ventas.append(venta)
+    except FileNotFoundError:
+        print("ventas.txt no encontrado.")
+
+def guardar_detalles_venta():
+    with open("detalles_venta.txt", "w", encoding="utf-8") as f:
+        for v in ventas:
+            for d in v.detalles:
+                f.write(f"{v.id_venta}|{d['producto'].id_producto}|{d['cantidad']}|{d['precio_unitario']}|{d['subtotal']}|{d['descuento']}\n")
+
+def guardar_compras():
+    with open("compras.txt", "w", encoding="utf-8") as f:
+        for c in compras:
+            f.write(f"{c.id_compra}|{c.fecha}|{c.proveedor.id_proveedor}|{c.total}\n")
+
+def cargar_compras():
+    try:
+        with open("compras.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                idc, fecha, idp, total = linea.strip().split("|")
+                proveedor = proveedores.get(int(idp))
+                compra = Compras(int(idc), fecha, proveedor)
+                compra.total = float(total)
+                compras.append(compra)
+    except FileNotFoundError:
+        print("compras.txt no encontrado.")
+
+def guardar_detalles_compra():
+    with open("detalles_compra.txt", "w", encoding="utf-8") as f:
+        for c in compras:
+            for d in c.detalles:
+                f.write(f"{c.id_compra}|{d['producto'].id_producto}|{d['cantidad']}|{d['precio_unitario']}|{d['subtotal']}|{d['fecha_caducidad']}\n")
+
+def guardar_stock():
+    with open("stock.txt", "w", encoding="utf-8") as f:
+        for p in productos.values():
+            f.write(f"{p.id_producto}|{p.stock}\n")
+
+def cargar_stock():
+    try:
+        with open("stock.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                idp, stock = linea.strip().split("|")
+                if int(idp) in productos:
+                    productos[int(idp)].stock = int(stock)
+    except FileNotFoundError:
+        print("stock.txt no encontrado.")
+#guardar .txt´s
+def guardar_todo():
+    guardar_productos()
+    guardar_clientes()
+    guardar_empleados()
+    guardar_categorias()
+    guardar_proveedores()
+    guardar_ventas()
+    guardar_compras()
+#menú
 while True:
     print("•••••••Menú Principal•••••••")
     print("1. Gerencia.")
