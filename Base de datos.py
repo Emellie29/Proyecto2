@@ -237,6 +237,14 @@ def informacion_empleado():
     empleados[id_empleado] = Empleados(id_empleado, nombreE, telefonoE, direccionE, correoE)
     print(f"Empleado agregado con ID {id_empleado}.")
 
+def obtener_ultimo_id_proveedor():
+    try:
+        with open("proveedores.txt", "r", encoding="utf-8") as f:
+            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
+            return max(ids) if ids else 0
+    except FileNotFoundError:
+        return 0
+
 def informacion_proveedor():
     print("\nInformación del Proveedor")
     id_proveedor = len(proveedores) + 1
@@ -254,6 +262,14 @@ def informacion_proveedor():
         return
     proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria)
     print("Proveedor agregado con éxito.")
+
+def obtener_ultimo_id_venta():
+    try:
+        with open("ventas.txt", "r", encoding="utf-8") as f:
+            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
+            return max(ids) if ids else 0
+    except FileNotFoundError:
+        return 0
 
 def registrar_venta():
     print("\nInformación de la Venta")
@@ -308,6 +324,14 @@ def registrar_oferta():
         return
     ofertas[id_producto] = descuento
     print(f"Oferta registrada: {descuento}% para el producto '{producto.nombreP}' (ID: {id_producto})")
+
+def obtener_ultimo_id_compra():
+    try:
+        with open("compras.txt", "r", encoding="utf-8") as f:
+            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
+            return max(ids) if ids else 0
+    except FileNotFoundError:
+        return 0
 
 def registrar_compra():
     print("\n Informacion de la Compra")
