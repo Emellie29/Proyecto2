@@ -156,51 +156,86 @@ def cargar_todo():
     cargar_ventas()
     cargar_compras()
 #agregar info
+def obtener_ultimo_id_categoria():
+    try:
+        with open("categorias.txt", "r", encoding="utf-8") as f:
+            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
+            return max(ids) if ids else 0
+    except FileNotFoundError:
+        return 0
+
 def agregar_categoria():
     print("\nAgregar Categoría")
-    id_categoria = len(categorias) + 1
+    id_categoria = obtener_ultimo_id_categoria() + 1
     nombreCate = input("Nombre de la categoría: ")
     categorias[id_categoria] = Categorias(id_categoria, nombreCate)
-    print("Categoría agregada con éxito.")
+    print(f"Categoría '{nombreCate}' agregada con ID {id_categoria}.")
+
+def obtener_ultimo_id_producto():
+    try:
+        with open("productos.txt", "r", encoding="utf-8") as f:
+            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
+            return max(ids) if ids else 0
+    except FileNotFoundError:
+        return 0
 
 def agregar_producto():
     print("\nAgregar Producto")
-    id_producto = len(productos) + 1
+    id_producto = obtener_ultimo_id_producto() + 1
     nombreP = input("Nombre del producto: ")
     precioP = int(input("Precio: Q."))
     print("Categorías disponibles:")
     for c in categorias.values():
-        print(c.resumen())
+       print(c.resumen())
     id_categoria = int(input("ID de la categoría: "))
     categoria = categorias.get(id_categoria)
     if not categoria:
-        print("Categoría no encontrada")
-        return
+       print("Categoría no encontrada.")
+       return
     productos[id_producto] = Productos(id_producto, nombreP, precioP, id_categoria)
-    print("Producto agregado con éxito.")
+    print(f"Producto agregado con ID {id_producto}.")
+
+def nit_existe_en_archivo(nit):
+    try:
+        with open("clientes.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                partes = linea.strip().split("|")
+                if partes and partes[0] == nit:
+                    return True
+        return False
+    except FileNotFoundError:
+        return False
 
 def informacion_cliente():
     print("\n Informacion de Cliente")
     nit = input("NIT: ")
-    if nit in clientes:
-        print("El NIT ya existe")
+    if nit in clientes or nit_existe_en_archivo(nit):
+        print("El NIT ya existe en el sistema.")
         return
     nombreCL = input("Nombre: ")
     telefono = input("Teléfono: ")
     direccion = input("Dirección: ")
     correo = input("Correo: ")
     clientes[nit] = Clientes(nit, nombreCL, telefono, direccion, correo)
-    print("Cliente agregado.")
+    print(f"Cliente con NIT {nit} agregado correctamente.")
+
+def obtener_ultimo_id_empleado():
+    try:
+        with open("empleados.txt", "r", encoding="utf-8") as f:
+            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
+            return max(ids) if ids else 0
+    except FileNotFoundError:
+        return 0
 
 def informacion_empleado():
-    print("\n Informacion del Empleado")
-    id_empleado = len(empleados)+1
+    print("\nInformación del Empleado")
+    id_empleado = obtener_ultimo_id_empleado() + 1  # ← ID secuencial desde archivo
     nombreE = input("Nombre: ")
     telefonoE = input("Teléfono: ")
     direccionE = input("Dirección: ")
     correoE = input("Correo: ")
     empleados[id_empleado] = Empleados(id_empleado, nombreE, telefonoE, direccionE, correoE)
-    print("Empleado agregado.")
+    print(f"Empleado agregado con ID {id_empleado}.")
 
 def informacion_proveedor():
     print("\nInformación del Proveedor")
@@ -562,6 +597,8 @@ while True:
                 else:
                     print("Opción inválida, intente de nuevo.")
         case "4":
+            print("Guardando información...")
+            guardar_todo()
             print("Cerrando el sistema. ¡Hasta pronto!")
             exit()
         case _:
