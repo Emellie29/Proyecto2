@@ -183,7 +183,7 @@ def agregar_producto():
     print("\nAgregar Producto")
     id_producto = obtener_ultimo_id_producto() + 1
     nombreP = input("Nombre del producto: ")
-    precioP = int(input("Precio: Q."))
+    precioP = float(input("Precio: Q."))
     print("Categorías disponibles:")
     for c in categorias.values():
        print(c.resumen())
@@ -351,7 +351,7 @@ def registrar_compra():
             print("Producto no existe.")
             continue
         cantidad = int(input("Cantidad: "))
-        precio_unitario = int(input("Precio unitario: Q."))
+        precio_unitario = float(input("Precio unitario: Q."))
         fecha_caducidad = input("Fecha de caducidad del producto (YYYY-MM-DD): ")
         compra.agregar_detalleC(producto, cantidad, precio_unitario, fecha_caducidad)
         print("Producto agregado.")
@@ -377,9 +377,9 @@ def mostrar_compras():
         print(f"Total: Q{compra.total:.2f}")
         print("Detalles:")
         for detalle in compra.detalles:
-            producto = detalle.producto  # ← accede al objeto directamente
+            producto = detalle.producto
             nombre_producto = producto.nombreP if producto else "Producto desconocido"
-            print(f"  - Producto: {nombre_producto}")
+            print(f"  • Producto: {nombre_producto}")
             print(f"    Cantidad: {detalle.cantidad}")
             print(f"    Precio Unitario: Q{detalle.precio_compra}")
             print(f"    Subtotal: Q{detalle.subtotal:.2f}")
