@@ -425,7 +425,8 @@ def guardar_productos():
             f.write(f"{p.id_producto}|{p.nombreP}|{p.precioP}|{p.stock}|{p.id_categoria}|{p.totalventas}|{p.totalcompras}")
 def cargar_productos():
     try:
-        with open("productos.txt", "r", encoding="utf-8") as f:
+        with open("productos.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 id_producto, nombre, precio, stock, cat, ventas, compras = linea.strip().split(":")
                 producto = Productos(int(id_producto), nombre, float(precio), int(cat), int(ventas), int(compras))
@@ -441,7 +442,8 @@ def guardar_categorias():
 
 def cargar_categorias():
     try:
-        with open("categorias.txt", "r", encoding="utf-8") as f:
+        with open("categorias.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 id_categoria, nombre = linea.strip().split("|")
                 categorias[int(id_categoria)] = Categorias(int(id_categoria), nombre)
@@ -455,7 +457,8 @@ def guardar_clientes():
 
 def cargar_clientes():
     try:
-        with open("clientes.txt", "r", encoding="utf-8") as f:
+        with open("clientes.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 nit, nombre, telefono, direccion, correo = linea.strip().split("|")
                 clientes[nit] = Clientes(nit, nombre, telefono, direccion, correo)
@@ -469,7 +472,8 @@ def guardar_empleados():
 
 def cargar_empleados():
     try:
-        with open("empleados.txt", "r", encoding="utf-8") as f:
+        with open("empleados.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 id_empleado, nombreE, telefonoE, direccionE, correoE = linea.strip().split("|")
                 empleados[int(id_empleado)] = Empleados(int(id_empleado), nombreE, telefonoE, direccionE, correoE)
@@ -483,7 +487,8 @@ def guardar_proveedores():
 
 def cargar_proveedores():
     try:
-        with open("proveedores.txt", "r", encoding="utf-8") as f:
+        with open("proveedores.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 id_proveedor, nombre_Pro, empresa, telefono_Pro, direccion_Pro, correo_Pro, id_categoria = linea.strip().split("|")
                 proveedores[int(id_proveedor)] = Proveedores(int(id_proveedor), nombre_Pro, empresa, telefono_Pro, direccion_Pro, correo_Pro, id_categoria, dir)
@@ -497,7 +502,8 @@ def guardar_ventas():
 
 def cargar_ventas():
     try:
-        with open("ventas.txt", "r", encoding="utf-8") as f:
+        with open("ventas.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 id_detalle_venta, fecha, nit, id_empleado, total = linea.strip().split("|")
                 cliente = clientes.get(nit)
@@ -521,7 +527,8 @@ def guardar_compras():
 
 def cargar_compras():
     try:
-        with open("compras.txt", "r", encoding="utf-8") as f:
+        with open("compras.txt", "a", encoding="utf-8") as f:
+            f.append("nueva linea de texto")
             for linea in f:
                 id_detalle_compra, fecha, id_proveedor, total = linea.strip().split("|")
                 proveedor = proveedores.get(int(id_proveedor))
