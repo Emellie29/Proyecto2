@@ -156,94 +156,51 @@ def cargar_todo():
     cargar_ventas()
     cargar_compras()
 #agregar info
-def obtener_ultimo_id_categoria():
-    try:
-        with open("categorias.txt", "r", encoding="utf-8") as f:
-            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
-            return max(ids) if ids else 0
-    except FileNotFoundError:
-        return 0
-
 def agregar_categoria():
     print("\nAgregar Categoría")
-    id_categoria = obtener_ultimo_id_categoria() + 1
+    id_categoria = len(categorias) + 1
     nombreCate = input("Nombre de la categoría: ")
     categorias[id_categoria] = Categorias(id_categoria, nombreCate)
-    print(f"Categoría '{nombreCate}' agregada con ID {id_categoria}.")
-
-def obtener_ultimo_id_producto():
-    try:
-        with open("productos.txt", "r", encoding="utf-8") as f:
-            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
-            return max(ids) if ids else 0
-    except FileNotFoundError:
-        return 0
+    print("Categoría agregada con éxito.")
 
 def agregar_producto():
     print("\nAgregar Producto")
-    id_producto = obtener_ultimo_id_producto() + 1
+    id_producto = len(productos) + 1
     nombreP = input("Nombre del producto: ")
     precioP = float(input("Precio: Q."))
     print("Categorías disponibles:")
     for c in categorias.values():
-       print(c.resumen())
+        print(c.resumen())
     id_categoria = int(input("ID de la categoría: "))
     categoria = categorias.get(id_categoria)
     if not categoria:
-       print("Categoría no encontrada.")
-       return
+        print("Categoría no encontrada")
+        return
     productos[id_producto] = Productos(id_producto, nombreP, precioP, id_categoria)
-    print(f"Producto agregado con ID {id_producto}.")
-
-def nit_existe_en_archivo(nit):
-    try:
-        with open("clientes.txt", "r", encoding="utf-8") as f:
-            for linea in f:
-                partes = linea.strip().split("|")
-                if partes and partes[0] == nit:
-                    return True
-        return False
-    except FileNotFoundError:
-        return False
+    print("Producto agregado con éxito.")
 
 def informacion_cliente():
     print("\n Informacion de Cliente")
     nit = input("NIT: ")
-    if nit in clientes or nit_existe_en_archivo(nit):
-        print("El NIT ya existe en el sistema.")
+    if nit in clientes:
+        print("El NIT ya existe")
         return
     nombreCL = input("Nombre: ")
     telefono = input("Teléfono: ")
     direccion = input("Dirección: ")
     correo = input("Correo: ")
     clientes[nit] = Clientes(nit, nombreCL, telefono, direccion, correo)
-    print(f"Cliente con NIT {nit} agregado correctamente.")
-
-def obtener_ultimo_id_empleado():
-    try:
-        with open("empleados.txt", "r", encoding="utf-8") as f:
-            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
-            return max(ids) if ids else 0
-    except FileNotFoundError:
-        return 0
+    print("Cliente agregado.")
 
 def informacion_empleado():
-    print("\nInformación del Empleado")
-    id_empleado = obtener_ultimo_id_empleado() + 1  # ← ID secuencial desde archivo
+    print("\n Informacion del Empleado")
+    id_empleado = len(empleados)+1
     nombreE = input("Nombre: ")
     telefonoE = input("Teléfono: ")
     direccionE = input("Dirección: ")
     correoE = input("Correo: ")
     empleados[id_empleado] = Empleados(id_empleado, nombreE, telefonoE, direccionE, correoE)
-    print(f"Empleado agregado con ID {id_empleado}.")
-
-def obtener_ultimo_id_proveedor():
-    try:
-        with open("proveedores.txt", "r", encoding="utf-8") as f:
-            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
-            return max(ids) if ids else 0
-    except FileNotFoundError:
-        return 0
+    print("Empleado agregado.")
 
 def informacion_proveedor():
     print("\nInformación del Proveedor")
@@ -262,14 +219,6 @@ def informacion_proveedor():
         return
     proveedores[id_proveedor] = Proveedores(id_proveedor, nombrePro, empresa, telefonoPro, direccionPro, correoPro, id_categoria)
     print("Proveedor agregado con éxito.")
-
-def obtener_ultimo_id_venta():
-    try:
-        with open("ventas.txt", "r", encoding="utf-8") as f:
-            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
-            return max(ids) if ids else 0
-    except FileNotFoundError:
-        return 0
 
 def registrar_venta():
     print("\nInformación de la Venta")
@@ -324,14 +273,6 @@ def registrar_oferta():
         return
     ofertas[id_producto] = descuento
     print(f"Oferta registrada: {descuento}% para el producto '{producto.nombreP}' (ID: {id_producto})")
-
-def obtener_ultimo_id_compra():
-    try:
-        with open("compras.txt", "r", encoding="utf-8") as f:
-            ids = [int(linea.strip().split("|")[0]) for linea in f if linea.strip()]
-            return max(ids) if ids else 0
-    except FileNotFoundError:
-        return 0
 
 def registrar_compra():
     print("\n Informacion de la Compra")
@@ -428,7 +369,7 @@ def cargar_productos():
         with open("productos.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                id_producto, nombre, precio, stock, cat, ventas, compras = linea.strip().split(":")
+                id_producto, nombre, precio, stock, cat, ventas, compras = linea.split(":")
                 producto = Productos(int(id_producto), nombre, float(precio), int(cat), int(ventas), int(compras))
                 producto.stock = int(stock)
                 productos[int(id_producto)] = producto
@@ -445,7 +386,7 @@ def cargar_categorias():
         with open("categorias.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                id_categoria, nombre = linea.strip().split("|")
+                id_categoria, nombre = linea.split(":")
                 categorias[int(id_categoria)] = Categorias(int(id_categoria), nombre)
     except FileNotFoundError:
         print("categorias.txt no encontrado.")
@@ -460,7 +401,7 @@ def cargar_clientes():
         with open("clientes.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                nit, nombre, telefono, direccion, correo = linea.strip().split("|")
+                nit, nombre, telefono, direccion, correo = linea.split(":")
                 clientes[nit] = Clientes(nit, nombre, telefono, direccion, correo)
     except FileNotFoundError:
         print("clientes.txt no encontrado.")
@@ -475,7 +416,7 @@ def cargar_empleados():
         with open("empleados.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                id_empleado, nombreE, telefonoE, direccionE, correoE = linea.strip().split("|")
+                id_empleado, nombreE, telefonoE, direccionE, correoE = linea.split(":")
                 empleados[int(id_empleado)] = Empleados(int(id_empleado), nombreE, telefonoE, direccionE, correoE)
     except FileNotFoundError:
         print("empleados.txt no encontrado.")
@@ -490,7 +431,7 @@ def cargar_proveedores():
         with open("proveedores.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                id_proveedor, nombre_Pro, empresa, telefono_Pro, direccion_Pro, correo_Pro, id_categoria = linea.strip().split("|")
+                id_proveedor, nombre_Pro, empresa, telefono_Pro, direccion_Pro, correo_Pro, id_categoria = linea.split(":")
                 proveedores[int(id_proveedor)] = Proveedores(int(id_proveedor), nombre_Pro, empresa, telefono_Pro, direccion_Pro, correo_Pro, id_categoria, dir)
     except FileNotFoundError:
         print("proveedores.txt no encontrado.")
@@ -505,7 +446,7 @@ def cargar_ventas():
         with open("ventas.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                id_detalle_venta, fecha, nit, id_empleado, total = linea.strip().split("|")
+                id_detalle_venta, fecha, nit, id_empleado, total = linea.split(":")
                 cliente = clientes.get(nit)
                 empleado = empleados.get(int(id_empleado))
                 venta = Ventas(int(id_detalle_venta), fecha, cliente, empleado)
@@ -530,7 +471,7 @@ def cargar_compras():
         with open("compras.txt", "a", encoding="utf-8") as f:
             f.append("nueva linea de texto")
             for linea in f:
-                id_detalle_compra, fecha, id_proveedor, total = linea.strip().split("|")
+                id_detalle_compra, fecha, id_proveedor, total = linea.split(":")
                 proveedor = proveedores.get(int(id_proveedor))
                 compra = Compras(int(id_detalle_compra), fecha, proveedor)
                 compra.total = float(total)
@@ -568,7 +509,10 @@ while True:
                 print("2. Consultar inventario.")
                 print("3. Mostrar ventas.")
                 print("4. Mostrar compras.")
-                print("5. Regresar al menú principal.")
+                print("5. Mostrar empleados.")
+                print("6. Mostrar proveedores.")
+                print("7. Mostrar clientes.")
+                print("8. Regresar al menú principal.")
                 opcion_gerencia = input("Seleccione una opción: ").strip()
                 if opcion_gerencia == "1":
                     informacion_empleado()
@@ -578,7 +522,7 @@ while True:
                     mostrar_ventas()
                 elif opcion_gerencia == "4":
                     mostrar_compras()
-                elif opcion_gerencia == "5":
+                elif opcion_gerencia == "8":
                     break
                 else:
                     print("Opción inválida, intente de nuevo.")
