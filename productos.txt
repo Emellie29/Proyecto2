@@ -1,2 +1,1 @@
-
-1|Queso Panela|26.35|1|1|0|0
+1:Jamon Serrano:15.1:572:1:28:585

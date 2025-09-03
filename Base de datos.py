@@ -90,9 +90,9 @@ class Ventas:
             self.ahorro_total = 0.0
         self.ahorro_total += ahorro
     def resumen(self):
-        return (f"Venta No. {self.id_venta} | Fecha: {self.fecha} | Cliente: {self.cliente.nombreCl} | "
-                f"Empleado: {self.empleado.nombreE} | Método de pago: {self.metodo_pago} | "
-                f"Total: Q.{self.total:.2f} | Ahorro por ofertas: Q.{self.ahorro_total:.2f}")
+        return (f"Venta No. {self.id_venta} - Fecha: {self.fecha} - Cliente: {self.cliente.nombreCl} - "
+                f"Empleado: {self.empleado.nombreE} - Método de pago: {self.metodo_pago} - "
+                f"Total: Q.{self.total:.2f} - Ahorro por ofertas: Q.{self.ahorro_total:.2f}")
 
 class DetalleVentas:
     def __init__(self, id_detalle_venta, id_venta, producto, cantidad):
@@ -103,8 +103,8 @@ class DetalleVentas:
         self.precio = producto.precioP
         self.subtotal = self.precio * self.cantidad
     def resumen(self):
-        return (f"Detalle No. {self.id_detalle_venta} | Venta No. {self.id_venta} | Producto ID: {self.id_producto} |"
-                f"Cantidad: {self.cantidad} | Precio: Q.{self.precio:.2f} | Subtotal: {self.subtotal:.2f}")
+        return (f"Detalle No. {self.id_detalle_venta} - Venta No. {self.id_venta} - Producto ID: {self.id_producto} -"
+                f"Cantidad: {self.cantidad} - Precio: Q.{self.precio:.2f} - Subtotal: {self.subtotal:.2f}")
 
 class Compras:
     def __init__(self, id_compra, fecha, id_proveedor, id_empleado):
@@ -124,8 +124,8 @@ class Compras:
         empleado = empleados.get(self.id_empleado)
         nombre_proveedor = proveedor.nombrePro if proveedor else "Desconocido"
         nombre_empleado = empleado.nombreE if empleado else "Desconocido"
-        return (f"Compra No. {self.id_compra} | Fecha: {self.fecha} | "
-                f"Proveedor: {nombre_proveedor} | Empleado: {nombre_empleado} | Total: Q.{self.total:.2f}")
+        return (f"Compra No. {self.id_compra} - Fecha: {self.fecha} - Proveedor: {nombre_proveedor} - "
+                f"Empleado: {nombre_empleado} - Total: Q.{self.total:.2f}")
 
 class DetalleCompras:
     def __init__(self, id_detalle_compra, compra, producto, cantidad, fecha_caducidad):
@@ -138,10 +138,10 @@ class DetalleCompras:
         self.subtotal = self.precio_compra * self.cantidad
         self.fecha_caducidad = fecha_caducidad
     def resumen(self):
-        return (f" Detalle No. {self.id_detalle_compra} | Compra No. {self.compra.id_compra} | "
-                f"Producto: {self.producto.nombreP} (ID: {self.id_producto}) | "
-                f"Cantidad: {self.cantidad} | Precio: Q.{self.precio_compra:.2f} | "
-                f"Subtotal: Q.{self.subtotal:.2f} | Caduca: {self.fecha_caducidad}")
+        return (f" Detalle No. {self.id_detalle_compra} - Compra No. {self.compra.id_compra} - "
+                f"Producto: {self.producto.nombreP} - (ID: {self.id_producto}) - "
+                f"Cantidad: {self.cantidad} - Precio: Q.{self.precio_compra:.2f} - "
+                f"Subtotal: Q.{self.subtotal:.2f} - Caduca: {self.fecha_caducidad}")
 #guardar info
 categorias = {}
 productos = {}
@@ -151,15 +151,6 @@ proveedores = {}
 ofertas = {}
 ventas = []
 compras = []
-#cargar .txt´s
-def cargar_todo():
-    cargar_productos()
-    cargar_clientes()
-    cargar_empleados()
-    cargar_categorias()
-    cargar_proveedores()
-    cargar_ventas()
-    cargar_compras()
 #agregar info
 def agregar_categoria():
     print("\nAgregar Categoría")
@@ -234,7 +225,7 @@ def registrar_venta():
         print(f"ID: {e.id_empleado} - Nombre: {e.nombreE}")
     id_empleado = int(input("ID del empleado: "))
     fecha = input("Fecha (dd/mm/aaaa): ")
-    metodo_pago = input("Método de pago (Efectivo/Tarjeta/Transferencia): ").strip().capitalize()
+    metodo_pago = input("Método de pago (Efectivo/Tarjeta): ").strip().capitalize()
     cliente = clientes.get(nit)
     empleado = empleados.get(id_empleado)
     if not cliente or not empleado:
@@ -250,6 +241,9 @@ def registrar_venta():
             print("El producto no existe.")
             continue
         cantidad = int(input("Cantidad del producto: "))
+        if producto.stock < cantidad:
+            print("Stock insuficiente.")
+            continue
         precio_unitario = producto.precioP
         descuento = ofertas.get(id_producto, 0)
         precio_final = precio_unitario * (1 - descuento / 100)
@@ -258,6 +252,8 @@ def registrar_venta():
         try:
             venta.agregar_detalleV(producto, cantidad, precio_final, descuento)
             print("Producto agregado con descuento.")
+            producto.stock -= cantidad
+            producto.totalventas += cantidad
         except ValueError as e:
             print(f"Error al agregar producto: {e}")
             opcion = input("¿Desea intentar con otro producto? [S/N]: ").lower()
@@ -270,6 +266,7 @@ def registrar_venta():
             break
     guardar_detalles_venta(venta)
     ventas.append(venta)
+    guardar_productos()
     print(f"Venta registrada con éxito. Total: Q{venta.total:.2f}")
 
 def registrar_oferta():
@@ -314,11 +311,15 @@ def registrar_compra():
         fecha_caducidad = input("Fecha de caducidad (dd/mm/aaaa): ")
         producto.precioP = precio_unitario
         compra.agregar_detalleC(producto, cantidad, precio_unitario, fecha_caducidad)
+        producto.stock += cantidad
+        producto.totalcompras += cantidad
         continuar = input("¿Agregar otro producto? (s/n): ").lower()
         if continuar != "s":
             break
     compras.append(compra)
-    print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
+    guardar_detalles_compra(compra)
+    print(f"Compra agregada con éxito. Total: Q{compra.total:.2f}")
+    guardar_productos()
 
 def mostrar_compras():
     print("Listado de Compras")
@@ -330,7 +331,7 @@ def mostrar_compras():
         empleado = empleados.get(compra.id_empleado)
         nombre_proveedor = proveedor.nombre_Pro if proveedor else "Desconocido"
         nombre_empleado = empleado.nombreE if empleado else "Desconocido"
-        print(f"\nID Compra: {compra.id_compra}")
+        print(f"ID Compra: {compra.id_compra}")
         print(f"Fecha: {compra.fecha}")
         print(f"Proveedor: {nombre_proveedor}")
         print(f"Empleado: {nombre_empleado}")
@@ -351,7 +352,7 @@ def mostrar_ventas():
         print("No hay ventas registradas.")
         return
     for venta in ventas:
-        print(f"\nID Venta: {venta.id_venta}")
+        print(f"ID Venta: {venta.id_venta}")
         print(f"Fecha: {venta.fecha}")
         print(f"Cliente: {venta.cliente.nombreCl}")
         print(f"Empleado: {venta.empleado.nombreE}")
@@ -392,7 +393,7 @@ def mostrar_clientes():
 
 def consultar_inventario():
     print("Inventario Actual")
-    print(f"Productos registrados: {len(productos)}\n")
+    print(f"Productos registrados: {len(productos)}")
     if not productos:
         print("No hay productos registrados.")
         return
@@ -405,11 +406,20 @@ def consultar_inventario():
         print(f"    Categoría: {nombre_cate}")
         print(f"    Total Compras: {producto.totalcompras}")
         print(f"    Total Ventas: {producto.totalventas}")
+# cargar .txt´s
+def cargar_todo():
+    cargar_productos()
+    cargar_clientes()
+    cargar_empleados()
+    cargar_categorias()
+    cargar_proveedores()
+    cargar_ventas()
+    cargar_compras()
 #.txt´s
 def guardar_productos():
-    with open("productos.txt", "a", encoding="utf-8") as f:
+    with open("productos.txt", "w", encoding="utf-8") as f:
         for p in productos.values():
-            f.write(f"{p.id_producto}|{p.nombreP}|{p.precioP}|{p.stock}|{p.id_categoria}|{p.totalventas}|{p.totalcompras}\n")
+            f.write(f"{p.id_producto}:{p.nombreP}:{p.precioP}:{p.stock}:{p.id_categoria}:{p.totalventas}:{p.totalcompras}\n")
 def cargar_productos():
     try:
         with open("productos.txt", "r", encoding="utf-8") as f:
@@ -423,16 +433,15 @@ def cargar_productos():
                     cat = int(partes[4])
                     ventas = int(partes[5])
                     compras = int(partes[6])
-                    producto = Productos(id_producto, nombreP, precioP, cat, ventas, compras)
-                    producto.stock = stock
+                    producto = Productos(id_producto, nombreP, precioP, stock, cat, ventas, compras)
                     productos[id_producto] = producto
     except FileNotFoundError:
         pass
 
 def guardar_categorias():
-    with open("categorias.txt", "a", encoding="utf-8") as f:
+    with open("categorias.txt", "w", encoding="utf-8") as f:
         for c in categorias.values():
-            f.write(f"{c.id_categoria}|{c.nombreCate}\n")
+            f.write(f"{c.id_categoria}:{c.nombreCate}\n")
 def cargar_categorias():
     try:
         with open("categorias.txt", "r", encoding="utf-8") as f:
@@ -446,9 +455,9 @@ def cargar_categorias():
         pass
 
 def guardar_clientes():
-    with open("clientes.txt", "a", encoding="utf-8") as f:
+    with open("clientes.txt", "w", encoding="utf-8") as f:
         for c in clientes.values():
-            f.write(f"{c.nit}|{c.nombreCl}|{c.telefono}|{c.direccion}|{c.correo}\n")
+            f.write(f"{c.nit}:{c.nombreCl}:{c.telefono}:{c.direccion}:{c.correo}\n")
 def cargar_clientes():
     try:
         with open("clientes.txt", "r", encoding="utf-8") as f:
@@ -461,9 +470,9 @@ def cargar_clientes():
         pass
 
 def guardar_empleados():
-    with open("empleados.txt", "a", encoding="utf-8") as f:
+    with open("empleados.txt", "w", encoding="utf-8") as f:
         for e in empleados.values():
-            f.write(f"{e.id_empleado}|{e.nombreE}|{e.telefonoE}|{e.direccionE}|{e.correoE}\n")
+            f.write(f"{e.id_empleado}:{e.nombreE}:{e.telefonoE}:{e.direccionE}:{e.correoE}\n")
 def cargar_empleados():
     try:
         with open("empleados.txt", "r", encoding="utf-8") as f:
@@ -480,9 +489,9 @@ def cargar_empleados():
         pass
 
 def guardar_proveedores():
-    with open("proveedores.txt", "a", encoding="utf-8") as f:
+    with open("proveedores.txt", "w", encoding="utf-8") as f:
         for p in proveedores.values():
-            f.write(f"{p.id_proveedor}|{p.nombre_Pro}|{p.empresa}|{p.telefono_Pro}|{p.direccion_Pro}|{p.correo_Pro}|{p.id_categoria}\n")
+            f.write(f"{p.id_proveedor}:{p.nombre_Pro}:{p.empresa}:{p.telefono_Pro}:{p.direccion_Pro}:{p.correo_Pro}:{p.id_categoria}\n")
 def cargar_proveedores():
     try:
         with open("proveedores.txt", "r", encoding="utf-8") as f:
@@ -501,9 +510,9 @@ def cargar_proveedores():
         pass
 
 def guardar_ventas():
-    with open("ventas.txt", "a", encoding="utf-8") as f:
+    with open("ventas.txt", "w", encoding="utf-8") as f:
         for v in ventas:
-            f.write(f"{v.id_venta}|{v.fecha}|{v.cliente.nit}|{v.empleado.id_empleado}|{v.metodo_pago}|{v.total}\n")
+            f.write(f"{v.id_venta}:{v.fecha}:{v.cliente.nit}:{v.empleado.id_empleado}:{v.metodo_pago}:{v.total}\n")
 def cargar_ventas():
     try:
         with open("ventas.txt", "r", encoding="utf-8") as f:
@@ -524,14 +533,15 @@ def cargar_ventas():
     except FileNotFoundError:
         pass
 def guardar_detalles_venta(venta):
-    with open("detalles_venta.txt", "a") as archivo:
+    with open("detalles_venta.txt", "w") as archivo:
         for detalle in venta.detalles:
-            archivo.write(f"{detalle.producto.nombre}, {detalle.cantidad}, {detalle.precio_unitario}, {detalle.descuento}\n")
+            archivo.write(f"{venta.id_venta}:{detalle['producto'].id_producto}:{detalle['producto'].nombreP}:"
+                          f"{detalle['cantidad']}:{detalle['precio_unitario']}:{detalle['descuento']}\n")
 
 def guardar_compras():
-    with open("compras.txt", "a", encoding="utf-8") as f:
+    with open("compras.txt", "w", encoding="utf-8") as f:
         for c in compras:
-            f.write(f"{c.id_compra}|{c.fecha}|{c.id_proveedor}|{c.id_empleado}|{c.total}\n")
+            f.write(f"{c.id_compra}:{c.fecha}:{c.id_proveedor}:{c.id_empleado}:{c.total}\n")
 def cargar_compras():
     try:
         with open("compras.txt", "r", encoding="utf-8") as f:
@@ -549,9 +559,10 @@ def cargar_compras():
     except FileNotFoundError:
         pass
 def guardar_detalles_compra(compra):
-    with open("detalles_compra.txt", "a") as archivo:
+    with open("detalles_compra.txt", "w") as archivo:
         for detalle in compra.detalles:
-            archivo.write(f"{detalle.producto.nombre}, {detalle.cantidad}, {detalle.precio_unitario}\n")
+            archivo.write(f"{compra.id_compra}:{detalle.producto.id_producto}:{detalle.producto.nombreP}:"
+                          f"{detalle.cantidad}:{detalle.precio_compra}:{detalle.fecha_caducidad}\n")
 #guardar .txt´s
 def guardar_todo():
     guardar_productos()
@@ -561,7 +572,8 @@ def guardar_todo():
     guardar_proveedores()
     guardar_ventas()
     guardar_compras()
-#menú
+# menú
+cargar_todo()
 while True:
     print("•••••••Menú Principal•••••••")
     print("1. Gerencia.")
