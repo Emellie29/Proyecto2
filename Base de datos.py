@@ -16,7 +16,7 @@ class Productos:
                 self.stock -= cantidad
                 self.totalventas += cantidad
             else:
-                print(f"Error: No hay suficiente stock para vender {cantidad} unidades de {self.nombreP}")
+                raise ValueError(f"No hay suficiente stock para vender {cantidad} unidades de {self.nombreP}")
     def resumen(self):
         return f"{self.id_producto} - {self.nombreP} - Q.{self.precioP:.2f} - Stock: {self.stock}"
 
@@ -116,7 +116,7 @@ class Compras:
         self.total = 0.0
     def agregar_detalleC(self, producto, cantidad, precio_uni, fecha_caducidad):
         producto.actualizar_stock(cantidad, "compra")
-        detalleC = DetalleCompras(len(self.detalles) + 1, self.id_compra, producto, cantidad, precio_uni, fecha_caducidad)
+        detalleC = DetalleCompras(len(self.detalles) + 1, self, producto, cantidad, fecha_caducidad)
         self.detalles.append(detalleC)
         self.total += detalleC.subtotal  #se acumula el total
     def resumen(self):
@@ -233,7 +233,7 @@ def registrar_venta():
     for e in empleados.values():
         print(f"ID: {e.id_empleado} - Nombre: {e.nombreE}")
     id_empleado = int(input("ID del empleado: "))
-    fecha = input("Fecha (YYYY-MM-DD): ")
+    fecha = input("Fecha (dd/mm/aaaa): ")
     metodo_pago = input("Método de pago (Efectivo/Tarjeta/Transferencia): ").strip().capitalize()
     cliente = clientes.get(nit)
     empleado = empleados.get(id_empleado)
@@ -263,11 +263,14 @@ def registrar_venta():
             opcion = input("¿Desea intentar con otro producto? [S/N]: ").lower()
             if opcion != "s":
                 print("Cancelando venta. Regresando al menú...")
-                return  # Esto te regresa al menú principal
+                return
             else:
-                continue  # Vuelve a pedir otro producto
+                continue
         if input("¿Desea agregar otro producto? [S/N]: ").lower() != "s":
             break
+    guardar_detalles_venta(venta)
+    ventas.append(venta)
+    print(f"Venta registrada con éxito. Total: Q{venta.total:.2f}")
 
 def registrar_oferta():
     print("Registrar Oferta")
@@ -285,28 +288,34 @@ def registrar_oferta():
     print(f"Oferta registrada: {descuento}% para el producto '{producto.nombreP}' (ID: {id_producto})")
 
 def registrar_compra():
-    print("\n Informacion de la Compra")
-    id_proveedor = int(input("ID proveedor: "))
-    id_empleado = int(input("ID empleado: "))
-    fecha = input("Fecha (YYYY-MM-DD): ").strip()
-    proveedor = proveedores.get(id_proveedor)
-    empleado = empleados.get(id_empleado)
-    if not proveedor or not empleado:
-        print("Proveedor o empleado no encontrado.")
-        return
-    compra = Compras(len(compras) + 1, fecha, id_proveedor, id_empleado)
+    print("\nRegistrar Compra")
+    id_compra = len(compras) + 1
+    fecha = input("Fecha (dd/mm/aaaa): ")
+    print("Proveedores disponibles:")
+    for p in proveedores.values():
+        print(p.resumen())
+    id_proveedor = int(input("ID del proveedor: "))
+    print("Empleados disponibles:")
+    for e in empleados.values():
+        print(e.resumen())
+    id_empleado = int(input("ID del empleado: "))
+    compra = Compras(id_compra, fecha, id_proveedor, id_empleado)
     while True:
-        id_producto = int(input("ID producto: "))
+        print("\nProductos disponibles:")
+        for p in productos.values():
+            print(p.resumen())
+        id_producto = int(input("ID del producto a comprar: "))
         producto = productos.get(id_producto)
         if not producto:
-            print("Producto no existe.")
+            print("Producto no encontrado.")
             continue
-        cantidad = int(input("Cantidad: "))
-        precio_unitario = float(input("Precio unitario: Q."))
-        fecha_caducidad = input("Fecha de caducidad del producto (YYYY-MM-DD): ")
+        cantidad = int(input("Cantidad a comprar: "))
+        precio_unitario = float(input("Precio unitario de compra: Q."))
+        fecha_caducidad = input("Fecha de caducidad (dd/mm/aaaa): ")
+        producto.precioP = precio_unitario
         compra.agregar_detalleC(producto, cantidad, precio_unitario, fecha_caducidad)
-        print("Producto agregado.")
-        if input("¿Desea agregar otro producto? [S/N]: ").lower() != "s":
+        continuar = input("¿Agregar otro producto? (s/n): ").lower()
+        if continuar != "s":
             break
     compras.append(compra)
     print(f"Compra agregada con exito. Total: Q{compra.total:.2f}")
@@ -347,10 +356,12 @@ def mostrar_ventas():
         print(f"Cliente: {venta.cliente.nombreCl}")
         print(f"Empleado: {venta.empleado.nombreE}")
         print(f"Total: Q{venta.total:.2f}")
+        print(f"Método de pago: {venta.metodo_pago}")
         print("Detalles:")
         for detalle in venta.detalles:
             producto = detalle["producto"]
             print(f"  - Producto: {producto.nombreP}")
+            print(f"    Método de pago: {venta.metodo_pago}")
             print(f"    Precio Unitario: Q{detalle['precio_unitario']:.2f}")
             print(f"    Subtotal: Q{detalle['subtotal']:.2f}")
             print(f"    Descuento aplicado: {detalle['descuento']}%")
@@ -492,21 +503,22 @@ def cargar_proveedores():
 def guardar_ventas():
     with open("ventas.txt", "a", encoding="utf-8") as f:
         for v in ventas:
-            f.write(f"{v.id_venta}|{v.fecha}|{v.cliente.nit}|{v.empleado.id_empleado}|{v.total}\n")
+            f.write(f"{v.id_venta}|{v.fecha}|{v.cliente.nit}|{v.empleado.id_empleado}|{v.metodo_pago}|{v.total}\n")
 def cargar_ventas():
     try:
         with open("ventas.txt", "r", encoding="utf-8") as f:
             for linea in f:
                 partes = linea.split(":")
-                if len(partes) == 5:
+                if len(partes) == 6:
                     id_venta = int(partes[0])
                     fecha = partes[1]
                     nit = partes[2]
                     id_empleado = int(partes[3])
-                    total = float(partes[4])
+                    metodo_pago = partes[4]
+                    total = float(partes[5])
                     cliente = clientes.get(nit)
                     empleado = empleados.get(id_empleado)
-                    venta = Ventas(id_venta, fecha, cliente, empleado)
+                    venta = Ventas(id_venta, fecha, cliente, empleado, metodo_pago)
                     venta.total = total
                     ventas.append(venta)
     except FileNotFoundError:
